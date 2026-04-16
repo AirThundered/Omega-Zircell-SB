@@ -1,11 +1,21 @@
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 
 local WalkSpeed = 20
 local JumpPower = 50
+local TeleportToMouse = false
+local TeleportKey = Enum.KeyCode.Z
+local OpenCloseButton = Enum.KeyCode.LeftControl
+
+local ZircellFrame = nil
+local IsTwenningZircellFrame = false
+
+local rebindConnections = {}
 
 local function SetupGui()
 	if player.PlayerGui:FindFirstChild("ZircellGui") then
@@ -19,10 +29,12 @@ local function SetupGui()
 	
 	local frame = Instance.new("Frame", gui)
 	frame.Size = UDim2.new(0.2, 0, 0.5, 0)
-	frame.Transparency = 0
+	frame.BackgroundTransparency = 0.2
 	frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	frame.AnchorPoint = Vector2.new(0.5, 0.5)
 	frame.Position = UDim2.new(0.2, 0, 0.5, 0)
+	
+	ZircellFrame = frame
 	
 	local UICorner = Instance.new("UICorner", frame)
 	UICorner.CornerRadius = UDim.new(0.1, 0)
@@ -60,8 +72,51 @@ local function SetupGui()
 	uiPadding.PaddingTop = UDim.new(0, 0)
 	uiPadding.PaddingBottom = UDim.new(0, 0)
 	
+	local closeFrame = Instance.new("Frame", utilities)
+	closeFrame.Size = UDim2.new(0.95, 0, 0.1, 0)
+	closeFrame.BackgroundTransparency = 1
+	closeFrame.LayoutOrder = 0
+	
+	local closeText = Instance.new("TextLabel", closeFrame)
+	closeText.Size = UDim2.new(0.7, 0, 1, 0)
+	closeText.Text = "Open/Close Button"
+	closeText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	closeText.TextScaled = true
+	closeText.BackgroundTransparency = 1
+	closeText.Font = Enum.Font.FredokaOne
+	closeText.FontFace.Weight = Enum.FontWeight.Bold
+	
+	local closeButton = Instance.new("TextButton", closeFrame)
+	closeButton.Size = UDim2.new(0.3, 0, 1, 0)
+	closeButton.Position = UDim2.new(0.7, 0, 0, 0)
+	closeButton.Text = "LeftControl"
+	closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	closeButton.TextScaled = true
+	closeButton.BackgroundTransparency = 1
+	closeButton.Font = Enum.Font.FredokaOne
+	closeButton.FontFace.Weight = Enum.FontWeight.Bold
+
+	local function startRebind()
+		if rebindConnections["OCB"] then
+			rebindConnections["OCB"]:Disconnect()
+			rebindConnections["OCB"] = nil
+		end
+		closeButton.Text = "Press a key..."
+		rebindConnections["OCB"] = UserInputService.InputBegan:Connect(function(input, gpe)
+
+			if input.UserInputType == Enum.UserInputType.Keyboard then
+				OpenCloseButton = input.KeyCode
+				closeButton.Text = input.KeyCode.Name
+				rebindConnections["OCB"]:Disconnect()
+				rebindConnections["OCB"] = nil
+			end
+		end)
+	end
+
+	closeButton.Activated:Connect(startRebind)
+	
 	local speedFrame = Instance.new("Frame", utilities)
-	speedFrame.Size = UDim2.new(1, 0, 0.1, 0)
+	speedFrame.Size = UDim2.new(0.95, 0, 0.1, 0)
 	speedFrame.BackgroundTransparency = 1
 	speedFrame.LayoutOrder = 1
 	
@@ -79,19 +134,19 @@ local function SetupGui()
 	local speedButton = Instance.new("TextButton", speedFrame)
 	speedButton.Size = UDim2.new(0.3, 0, 1, 0)
 	speedButton.Position = UDim2.new(0.7, 0, 0, 0)
-	speedButton.Text = "Set speed"
+	speedButton.Text = "Set Speed"
 	speedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	speedButton.TextScaled = true
 	speedButton.BackgroundTransparency = 1
 	speedButton.Font = Enum.Font.FredokaOne
 	speedButton.FontFace.Weight = Enum.FontWeight.Bold
 	
-	speedButton.MouseButton1Click:Connect(function()
+	speedButton.Activated:Connect(function()
 		WalkSpeed = tonumber(speedTextBox.Text)
 	end)
 	
 	local jumpFrame = Instance.new("Frame", utilities)
-	jumpFrame.Size = UDim2.new(1, 0, 0.1, 0)
+	jumpFrame.Size = UDim2.new(0.95, 0, 0.1, 0)
 	jumpFrame.BackgroundTransparency = 1
 	jumpFrame.LayoutOrder = 2
 
@@ -109,21 +164,133 @@ local function SetupGui()
 	local jumpButton = Instance.new("TextButton", jumpFrame)
 	jumpButton.Size = UDim2.new(0.3, 0, 1, 0)
 	jumpButton.Position = UDim2.new(0.7, 0, 0, 0)
-	jumpButton.Text = "Set jump"
+	jumpButton.Text = "Set Jump"
 	jumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	jumpButton.TextScaled = true
 	jumpButton.BackgroundTransparency = 1
 	jumpButton.Font = Enum.Font.FredokaOne
 	jumpButton.FontFace.Weight = Enum.FontWeight.Bold
 
-	jumpButton.MouseButton1Click:Connect(function()
+	jumpButton.Activated:Connect(function()
 		JumpPower = tonumber(jumpTextBox.Text)
+	end)
+	
+	local teleportFrame = Instance.new("Frame", utilities)
+	teleportFrame.Size = UDim2.new(0.95, 0, 0.1, 0)
+	teleportFrame.BackgroundTransparency = 1
+	teleportFrame.LayoutOrder = 3
+	
+	local teleportText = Instance.new("TextLabel", teleportFrame)
+	teleportText.Size = UDim2.new(0.7, 0, 1, 0)
+	teleportText.Text = "Teleport to Mouse"
+	teleportText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	teleportText.TextScaled = true
+	teleportText.BackgroundTransparency = 1
+	teleportText.Font = Enum.Font.FredokaOne
+	teleportText.FontFace.Weight = Enum.FontWeight.Bold
+
+	local teleportButton = Instance.new("TextButton", teleportFrame)
+	teleportButton.Size = UDim2.new(0.3, 0, 1, 0)
+	teleportButton.Position = UDim2.new(0.7, 0, 0, 0)
+	teleportButton.Text = "False"
+	teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	teleportButton.TextScaled = true
+	teleportButton.BackgroundTransparency = 1
+	teleportButton.Font = Enum.Font.FredokaOne
+	teleportButton.FontFace.Weight = Enum.FontWeight.Bold
+	
+	teleportButton.Activated:Connect(function()
+		if teleportButton.Text == "False" then
+			teleportButton.Text = "True"
+			TeleportToMouse = true
+		else
+			teleportButton.Text = "False"
+			TeleportToMouse = false
+		end
+	end)
+	
+	local teleportFrameRebind = Instance.new("Frame", utilities)
+	teleportFrameRebind.Size = UDim2.new(0.95, 0, 0.1, 0)
+	teleportFrameRebind.BackgroundTransparency = 1
+	teleportFrameRebind.LayoutOrder = 4
+
+	local teleportRebindText = Instance.new("TextLabel", teleportFrameRebind)
+	teleportRebindText.Size = UDim2.new(0.7, 0, 1, 0)
+	teleportRebindText.Text = "Teleport Button"
+	teleportRebindText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	teleportRebindText.TextScaled = true
+	teleportRebindText.BackgroundTransparency = 1
+	teleportRebindText.Font = Enum.Font.FredokaOne
+	teleportRebindText.FontFace.Weight = Enum.FontWeight.Bold
+
+	local teleportRebindButton = Instance.new("TextButton", teleportFrameRebind)
+	teleportRebindButton.Size = UDim2.new(0.3, 0, 1, 0)
+	teleportRebindButton.Position = UDim2.new(0.7, 0, 0, 0)
+	teleportRebindButton.Text = "Z"
+	teleportRebindButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	teleportRebindButton.TextScaled = true
+	teleportRebindButton.BackgroundTransparency = 1
+	teleportRebindButton.Font = Enum.Font.FredokaOne
+	teleportRebindButton.FontFace.Weight = Enum.FontWeight.Bold
+
+	local function startTeleportRebind()
+		if rebindConnections["TtMB"] then
+			rebindConnections["TtMB"]:Disconnect()
+			rebindConnections["TtMB"] = nil
+		end
+		teleportRebindButton.Text = "Press a key..."
+		rebindConnections["TtMB"] = UserInputService.InputBegan:Connect(function(input, gpe)
+
+			if input.UserInputType == Enum.UserInputType.Keyboard then
+				TeleportKey = input.KeyCode
+				teleportRebindButton.Text = input.KeyCode.Name
+				rebindConnections["TtMB"]:Disconnect()
+				rebindConnections["TtMB"] = nil
+			end
+		end)
+	end
+
+	teleportRebindButton.Activated:Connect(startTeleportRebind)
+	
+	local getEmotesFrame = Instance.new("Frame", utilities)
+	getEmotesFrame.Size = UDim2.new(0.95, 0, 0.1, 0)
+	getEmotesFrame.BackgroundTransparency = 1
+	getEmotesFrame.LayoutOrder = 5
+
+	local getEmotesText = Instance.new("TextLabel", getEmotesFrame)
+	getEmotesText.Size = UDim2.new(0.7, 0, 1, 0)
+	getEmotesText.Text = "Animation Pack"
+	getEmotesText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	getEmotesText.TextScaled = true
+	getEmotesText.BackgroundTransparency = 1
+	getEmotesText.Font = Enum.Font.FredokaOne
+	getEmotesText.FontFace.Weight = Enum.FontWeight.Bold
+
+	local getEmotesButton = Instance.new("TextButton", getEmotesFrame)
+	getEmotesButton.Size = UDim2.new(0.3, 0, 1, 0)
+	getEmotesButton.Position = UDim2.new(0.7, 0, 0, 0)
+	getEmotesButton.Text = "Claim"
+	getEmotesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	getEmotesButton.TextScaled = true
+	getEmotesButton.BackgroundTransparency = 1
+	getEmotesButton.Font = Enum.Font.FredokaOne
+	getEmotesButton.FontFace.Weight = Enum.FontWeight.Bold
+	
+	getEmotesButton.Activated:Connect(function()
+		local emotes = ReplicatedStorage:WaitForChild("AnimationPack"):GetChildren()
+		local emotesFolder = ReplicatedStorage:WaitForChild("PlayerData"):WaitForChild(player.Name):WaitForChild("Emotes")
+		
+		for i, emote in pairs(emotes) do
+			emotesFolder:FindFirstChild("EquippedSlot"..i).Value = emote.Name
+		end
+		
+		getEmotesButton.Text = "Claimed"
 	end)
 end
 
 
 local function CreateHL(char)
-	if char and char:FindFirstChild("ZIRCELL_HL") then
+	if char and char:FindFirstChild("Zircell_Highlight") or char == player.Character then
 		return
 	end
 
@@ -135,6 +302,28 @@ local function CreateHL(char)
 	hl.Parent = char
 end
 
+local function CloseZircellFrame()
+	if IsTwenningZircellFrame then return end
+
+	local tween1 = TweenService:Create(ZircellFrame, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.new(0, 0, 0, 0)})
+	local tween2 = TweenService:Create(ZircellFrame, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.new(0.2, 0, 0.5, 0)})
+	if ZircellFrame.Visible then
+		IsTwenningZircellFrame = true
+		tween1:Play()
+		tween1.Completed:Connect(function()
+			ZircellFrame.Visible = false
+			IsTwenningZircellFrame = false
+		end)
+	else
+		IsTwenningZircellFrame = true
+		ZircellFrame.Visible = true
+		tween2:Play()
+		tween2.Completed:Connect(function()
+			IsTwenningZircellFrame = false
+		end)
+	end
+end
+
 SetupGui()
 
 RunService.Heartbeat:Connect(function()
@@ -142,6 +331,7 @@ RunService.Heartbeat:Connect(function()
 	local hum = char and char:FindFirstChild("Humanoid")
 	
 	if char and hum and hum.Health > 0 then
+		hum.UseJumpPower = true
 		hum.WalkSpeed = WalkSpeed
 		hum.JumpPower = JumpPower
 	end
@@ -151,21 +341,14 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
-local SpeedBoost = false
-
 UserInputService.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 
-	if input.KeyCode == Enum.KeyCode.R then
-		player.Character.HumanoidRootPart.CFrame = CFrame.new(player:GetMouse().Hit.p)
-	elseif input.KeyCode == Enum.KeyCode.LeftControl then
-		if SpeedBoost then
-			player.Character.Humanoid.WalkSpeed = 50
-			SpeedBoost = false
-		else 
-			player.Character.Humanoid.WalkSpeed = 20
-			SpeedBoost = true
-		end
+	if input.KeyCode == OpenCloseButton then
+		CloseZircellFrame()
+	elseif input.KeyCode == TeleportKey and TeleportToMouse then
+			player.Character.HumanoidRootPart.Position = player:GetMouse().Hit.Position
+		else
 	end
 end)
 
