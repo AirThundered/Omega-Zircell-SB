@@ -49,6 +49,17 @@ local function SetupGui()
 	utilities.ScrollingDirection = Enum.ScrollingDirection.Y
 	utilities.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	
+	local uiListLayout = Instance.new("UIListLayout", utilities)
+	uiListLayout.Padding = UDim.new(0, 5)
+	uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	uiListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	uiListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	uiListLayout.FillDirection = Enum.FillDirection.Vertical
+	
+	local uiPadding = Instance.new("UIPadding", utilities)
+	uiPadding.PaddingTop = UDim.new(0, 0)
+	uiPadding.PaddingBottom = UDim.new(0, 0)
+	
 	local speedFrame = Instance.new("Frame", utilities)
 	speedFrame.Size = UDim2.new(1, 0, 0.1, 0)
 	speedFrame.BackgroundTransparency = 1
@@ -86,7 +97,7 @@ local function SetupGui()
 
 	local jumpTextBox = Instance.new("TextBox", jumpFrame)
 	jumpTextBox.Size = UDim2.new(0.7, 0, 1, 0)
-	jumpTextBox.PlaceholderText = "20"
+	jumpTextBox.PlaceholderText = "50"
 	jumpTextBox.Text = ""
 	jumpTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 	jumpTextBox.TextScaled = true
