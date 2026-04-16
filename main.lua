@@ -16,7 +16,6 @@ local OpenCloseButton = Enum.KeyCode.LeftControl
 local AllowedPlacesForAnimationPack = {
 	6403373529, -- Regular Server
 	9015014224, -- No Oneshot Gloves Server
-	9431156611, -- Slap Royale Server
 	11520107397, -- Killstreak Only Server
 	124596094333302, -- New Players Server
 	98871361390239, -- Randomizer Gamemode Server
