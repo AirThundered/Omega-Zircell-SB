@@ -284,7 +284,7 @@ local function SetupGui()
 	getEmotesButton.FontFace.Weight = Enum.FontWeight.Bold
 	
 	getEmotesButton.Activated:Connect(function()
-		if game.GameId ~= 6403373529 then
+		if game.GameId ~= 2380077519 then
 			getEmotesButton.Text = "Error"
 			getEmotesButton.TextColor3 = Color3.fromRGB(255, 0, 0)
 			return
