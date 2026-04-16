@@ -284,13 +284,19 @@ local function SetupGui()
 	getEmotesButton.FontFace.Weight = Enum.FontWeight.Bold
 	
 	getEmotesButton.Activated:Connect(function()
+		if game.GameId ~= 6403373529 then
+			getEmotesButton.Text = "Error"
+			getEmotesButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+			return
+		end
+		
 		local emotes = ReplicatedStorage:WaitForChild("AnimationPack"):GetChildren()
 		local emotesFolder = ReplicatedStorage:WaitForChild("PlayerData"):WaitForChild(player.Name):WaitForChild("Emotes")
-		
+
 		for i, emote in pairs(emotes) do
 			emotesFolder:FindFirstChild("EquippedSlot"..i).Value = emote.Name
 		end
-		
+
 		getEmotesButton.Text = "Claimed"
 		getEmotesButton.TextColor3 = Color3.fromRGB(0, 255, 0)
 	end)
@@ -406,7 +412,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 	if input.KeyCode == OpenCloseButton then
 		CloseZircellFrame()
 	elseif input.KeyCode == TeleportKey and TeleportToMouseToggle then
-			player.Character.HumanoidRootPart.Position = player:GetMouse().Hit.Position
+			player.Character.HumanoidRootPart.CFrame = CFrame.new(player:GetMouse().Hit.Position)
 		else
 	end
 end)
