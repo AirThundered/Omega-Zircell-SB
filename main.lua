@@ -362,9 +362,6 @@ local function CreateHL(char)
 end
 
 local function RemoveHL(char)
-	if char and char == player.Character then
-		return
-	end
 	if char and char:FindFirstChild("Zircell_Highlight") then
 		char.Zircell_Highlight:Destroy()
 	end
@@ -406,11 +403,11 @@ RunService.Heartbeat:Connect(function()
 	
 	if ESPToggle then
 		for i, plr in pairs(Players:GetPlayers()) do
-			CreateHL(plr.Character)
+			coroutine.wrap(CreateHL)(plr.Character)
 		end
 	else
 		for i, plr in pairs(Players:GetPlayers()) do
-			RemoveHL(plr.Character)
+			coroutine.wrap(RemoveHL)(plr.Character)
 		end
 	end
 end)
