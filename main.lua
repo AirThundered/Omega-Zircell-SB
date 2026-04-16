@@ -13,6 +13,15 @@ local ESPToggle = false
 local TeleportKey = Enum.KeyCode.Z
 local OpenCloseButton = Enum.KeyCode.LeftControl
 
+local AllowedPlacesForAnimationPack = {
+	6403373529, -- Regular Server
+	9015014224, -- No Oneshot Gloves Server
+	9431156611, -- Slap Royale Server
+	11520107397, -- Killstreak Only Server
+	124596094333302, -- New Players Server
+	98871361390239, -- Randomizer Gamemode Server
+}
+
 local ZircellFrame = nil
 local IsTwenningZircellFrame = false
 
@@ -284,7 +293,7 @@ local function SetupGui()
 	getEmotesButton.FontFace.Weight = Enum.FontWeight.Bold
 	
 	getEmotesButton.Activated:Connect(function()
-		if game.GameId ~= 2380077519 then
+		if not table.find(AllowedPlacesForAnimationPack, game.PlaceId) then
 			getEmotesButton.Text = "Error"
 			getEmotesButton.TextColor3 = Color3.fromRGB(255, 0, 0)
 			return
