@@ -8,7 +8,8 @@ local player = Players.LocalPlayer
 
 local WalkSpeed = 20
 local JumpPower = 50
-local TeleportToMouse = false
+local TeleportToMouseToggle = false
+local ESPToggle = false
 local TeleportKey = Enum.KeyCode.Z
 local OpenCloseButton = Enum.KeyCode.LeftControl
 
@@ -102,11 +103,13 @@ local function SetupGui()
 			rebindConnections["OCB"] = nil
 		end
 		closeButton.Text = "Press a key..."
+		closeButton.TextColor3 = Color3.fromRGB(255, 255, 0)
 		rebindConnections["OCB"] = UserInputService.InputBegan:Connect(function(input, gpe)
 
 			if input.UserInputType == Enum.UserInputType.Keyboard then
 				OpenCloseButton = input.KeyCode
 				closeButton.Text = input.KeyCode.Name
+				closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 				rebindConnections["OCB"]:Disconnect()
 				rebindConnections["OCB"] = nil
 			end
@@ -193,7 +196,7 @@ local function SetupGui()
 	teleportButton.Size = UDim2.new(0.3, 0, 1, 0)
 	teleportButton.Position = UDim2.new(0.7, 0, 0, 0)
 	teleportButton.Text = "False"
-	teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	teleportButton.TextColor3 = Color3.fromRGB(255, 0, 0)
 	teleportButton.TextScaled = true
 	teleportButton.BackgroundTransparency = 1
 	teleportButton.Font = Enum.Font.FredokaOne
@@ -202,10 +205,12 @@ local function SetupGui()
 	teleportButton.Activated:Connect(function()
 		if teleportButton.Text == "False" then
 			teleportButton.Text = "True"
-			TeleportToMouse = true
+			teleportButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+			TeleportToMouseToggle = true
 		else
 			teleportButton.Text = "False"
-			TeleportToMouse = false
+			teleportButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+			TeleportToMouseToggle = false
 		end
 	end)
 	
@@ -239,11 +244,13 @@ local function SetupGui()
 			rebindConnections["TtMB"] = nil
 		end
 		teleportRebindButton.Text = "Press a key..."
+		teleportRebindButton.TextColor3 = Color3.fromRGB(255, 255, 0)
 		rebindConnections["TtMB"] = UserInputService.InputBegan:Connect(function(input, gpe)
 
 			if input.UserInputType == Enum.UserInputType.Keyboard then
 				TeleportKey = input.KeyCode
 				teleportRebindButton.Text = input.KeyCode.Name
+				teleportRebindButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 				rebindConnections["TtMB"]:Disconnect()
 				rebindConnections["TtMB"] = nil
 			end
@@ -270,7 +277,7 @@ local function SetupGui()
 	getEmotesButton.Size = UDim2.new(0.3, 0, 1, 0)
 	getEmotesButton.Position = UDim2.new(0.7, 0, 0, 0)
 	getEmotesButton.Text = "Claim"
-	getEmotesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	getEmotesButton.TextColor3 = Color3.fromRGB(255, 255, 0)
 	getEmotesButton.TextScaled = true
 	getEmotesButton.BackgroundTransparency = 1
 	getEmotesButton.Font = Enum.Font.FredokaOne
@@ -285,6 +292,43 @@ local function SetupGui()
 		end
 		
 		getEmotesButton.Text = "Claimed"
+		getEmotesButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+	end)
+	
+	local espFrame = Instance.new("Frame", utilities)
+	espFrame.Size = UDim2.new(0.95, 0, 0.1, 0)
+	espFrame.BackgroundTransparency = 1
+	espFrame.LayoutOrder = 6
+
+	local espText = Instance.new("TextLabel", espFrame)
+	espText.Size = UDim2.new(0.7, 0, 1, 0)
+	espText.Text = "ESP"
+	espText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	espText.TextScaled = true
+	espText.BackgroundTransparency = 1
+	espText.Font = Enum.Font.FredokaOne
+	espText.FontFace.Weight = Enum.FontWeight.Bold
+
+	local espButton = Instance.new("TextButton", espFrame)
+	espButton.Size = UDim2.new(0.3, 0, 1, 0)
+	espButton.Position = UDim2.new(0.7, 0, 0, 0)
+	espButton.Text = "False"
+	espButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+	espButton.TextScaled = true
+	espButton.BackgroundTransparency = 1
+	espButton.Font = Enum.Font.FredokaOne
+	espButton.FontFace.Weight = Enum.FontWeight.Bold
+
+	espButton.Activated:Connect(function()
+		if espButton.Text == "False" then
+			espButton.Text = "True"
+			espButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+			ESPToggle = true
+		else
+			espButton.Text = "False"
+			espButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+			ESPToggle = false
+		end
 	end)
 end
 
@@ -296,10 +340,19 @@ local function CreateHL(char)
 
 	local hl = Instance.new("Highlight")
 	hl.Name = "Zircell_Highlight"
-	hl.FillColor = Color3.fromRGB(200, 200, 255)
-	hl.OutlineColor = Color3.fromRGB(0, 0, 255)
+	hl.FillColor = Color3.fromRGB(255, 0, 0)
+	hl.OutlineColor = Color3.fromRGB(150, 0, 0)
 	hl.FillTransparency = 0.5
 	hl.Parent = char
+end
+
+local function RemoveHL(char)
+	if char and char == player.Character then
+		return
+	end
+	if char and char:FindFirstChild("Zircell_Highlight") then
+		char.Zircell_Highlight:Destroy()
+	end
 end
 
 local function CloseZircellFrame()
@@ -332,12 +385,18 @@ RunService.Heartbeat:Connect(function()
 	
 	if char and hum and hum.Health > 0 then
 		hum.UseJumpPower = true
-		hum.WalkSpeed = WalkSpeed
-		hum.JumpPower = JumpPower
+		hum.WalkSpeed = WalkSpeed or 20
+		hum.JumpPower = JumpPower or 50
 	end
 	
-	for i, plr in pairs(Players:GetPlayers()) do
-		CreateHL(plr.Character)
+	if ESPToggle then
+		for i, plr in pairs(Players:GetPlayers()) do
+			CreateHL(plr.Character)
+		end
+	else
+		for i, plr in pairs(Players:GetPlayers()) do
+			RemoveHL(plr.Character)
+		end
 	end
 end)
 
@@ -346,11 +405,8 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 
 	if input.KeyCode == OpenCloseButton then
 		CloseZircellFrame()
-	elseif input.KeyCode == TeleportKey and TeleportToMouse then
+	elseif input.KeyCode == TeleportKey and TeleportToMouseToggle then
 			player.Character.HumanoidRootPart.Position = player:GetMouse().Hit.Position
 		else
 	end
 end)
-
-
-
